@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.fragment.app.viewModels
 import com.audigint.throwback.R
+import com.audigint.throwback.databinding.LoginDialogBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -18,16 +19,20 @@ class LoginDialogFragment : AppCompatDialogFragment() {
 
     private val loginViewModel: LoginViewModel by viewModels()
 
+    private lateinit var binding: LoginDialogBinding
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.login_dialog, container, false)
+        binding = LoginDialogBinding.inflate(layoutInflater, container, false)
+        return binding.root
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        // TODO: Use the ViewModel
+
+        binding.viewModel = loginViewModel
     }
 
 }

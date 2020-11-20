@@ -2,6 +2,7 @@ package com.audigint.throwback.ui
 
 import android.app.Activity
 import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.sdk.android.auth.AuthorizationClient
@@ -10,6 +11,7 @@ import com.spotify.sdk.android.auth.AuthorizationResponse
 import androidx.hilt.lifecycle.ViewModelInject
 import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
+import timber.log.Timber
 
 private val CLIENT_ID = "e504f7f2aa3145bc9280c67c210de1fb"
 private val REDIRECT_URI = "com.audigint.throwback://"
@@ -17,6 +19,7 @@ private val REDIRECT_URI = "com.audigint.throwback://"
 class LoginViewModel @ViewModelInject constructor() : ViewModel() {
 
     fun onSignIn() {
+        Timber.d("Sign in Clicked")
 //        var builder = AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
 //
 //        builder.setScopes(arrayOf("streaming"))
