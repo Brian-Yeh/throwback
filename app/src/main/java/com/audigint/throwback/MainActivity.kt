@@ -2,18 +2,15 @@ package com.audigint.throwback
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.NavController
+import androidx.navigation.findNavController
 import com.audigint.throwback.data.SongRepository
-import com.audigint.throwback.data.SongRoomDatabase
-import com.audigint.throwback.ui.LoginDialogFragment
+import com.audigint.throwback.ui.PlayerFragmentDirections
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.protocol.types.Track
-import com.spotify.sdk.android.auth.AuthorizationClient
-import com.spotify.sdk.android.auth.AuthorizationRequest
-import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
@@ -22,6 +19,8 @@ private val CLIENT_ID = "e504f7f2aa3145bc9280c67c210de1fb"
 private val REDIRECT_URI = "com.audigint.throwback://"
 private var mSpotifyAppRemote: SpotifyAppRemote? = null
 private var songRepository: SongRepository? = null
+private lateinit var navController: NavController
+private var signedIn: Boolean = false
 
 private val DIALOG_LOGIN = "dialog_login"
 
@@ -31,15 +30,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        val signInButton = findViewById<Button>(R.id.signInButton)
-//        signInButton?.setOnClickListener() {
-//            signIn()
-//        }
-//
-//        val signOutButton = findViewById<Button>(R.id.signOutButton)
-//        signOutButton?.setOnClickListener() {
-//            signOut()
-//        }
+        navController = findNavController(R.id.nav_host_fragment)
+
+        if (!signedIn) {
+            val action = PlayerFragmentDirections.actionPlayerFragmentToLoginFragment()
+            navController.navigate(action)
+        }
 
         // TODO: Use Database
 //        val songsDao = SongRoomDatabase.getDatabase(applicationContext).songDao()
@@ -48,8 +44,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        Timber.d("Showing Login Dialog")
-        LoginDialogFragment().show(supportFragmentManager, DIALOG_LOGIN)
 //        val songsArray = songRepository?.getSongsByYearAndPosition(2012, 10)
 //        if (songsArray == null) {
 //            Log.w(LOG_TAG, "Failed to get songs")
@@ -58,15 +52,6 @@ class MainActivity : AppCompatActivity() {
 //                Log.d(LOG_TAG, "${song.title}")
 //            }
 //        }
-    }
-
-    private fun signIn() {
-        var builder = AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
-
-        builder.setScopes(arrayOf("streaming"))
-        val request = builder.build();
-
-        AuthorizationClient.openLoginInBrowser(this, request);
     }
 
     private fun connect() {
@@ -105,20 +90,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun signOut() {
-        mSpotifyAppRemote?.let {
-            it.playerApi.pause()
-            SpotifyAppRemote.disconnect(it)
-        }
-        AuthorizationClient.clearCookies(this)
-//        var builder = AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
-//
-//        builder.setScopes(arrayOf("streaming"))
-//        builder.setShowDialog(true);
-//        val request = builder.build();
-//
-//        openLoginInBrowser(this, request)
-    }
+//    private fun signOut() {
+//        mSpotifyAppRemote?.let {
+//            it.playerApi.pause()
+//            SpotifyAppRemote.disconnect(it)
+//        }
+//        AuthorizationClient.clearCookies(this)
+//    }
 
     override fun onStop() {
         super.onStop()

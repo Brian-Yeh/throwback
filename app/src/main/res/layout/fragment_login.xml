@@ -6,14 +6,14 @@
     <data>
         <variable
             name="viewModel"
-            type="com.audigint.throwback.ui.LoginViewModel" />
+            type="com.audigint.throwback.ui.auth.LoginViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        tools:context=".ui.LoginDialogFragment"
+        tools:context=".ui.auth.LoginFragment"
         android:layout_margin="@dimen/cardview_compat_inset_shadow">
 
         <androidx.constraintlayout.widget.Guideline
@@ -38,7 +38,8 @@
             android:text="@string/login_description"
             app:layout_constraintStart_toEndOf="@id/guideline_left"
             app:layout_constraintEnd_toStartOf="@id/guideline_right"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
 
         <Button
@@ -51,8 +52,7 @@
             android:onClick="@{() -> viewModel.onSignIn()}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/signInDescription"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintTop_toBottomOf="@+id/signInDescription"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
