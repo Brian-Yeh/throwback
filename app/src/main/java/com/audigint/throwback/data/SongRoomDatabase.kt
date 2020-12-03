@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(entities = arrayOf(Song::class), version = 1, exportSchema = true)
-public abstract class SongRoomDatabase : RoomDatabase() {
+abstract class SongRoomDatabase : RoomDatabase() {
 
     abstract fun songDao(): SongDao
 
@@ -24,8 +24,10 @@ public abstract class SongRoomDatabase : RoomDatabase() {
                     context.applicationContext,
                     SongRoomDatabase::class.java,
                     "songs_database"
-                ).createFromAsset("databases/billboard_songs.db").fallbackToDestructiveMigration()
-                    .build()
+                ).apply {
+                    createFromAsset("databases/billboard_songs.db")
+                    fallbackToDestructiveMigration()
+                }.build()
                 INSTANCE = instance
                 return instance
             }

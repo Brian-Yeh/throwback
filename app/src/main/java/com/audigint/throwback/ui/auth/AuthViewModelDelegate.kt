@@ -3,6 +3,7 @@ package com.audigint.throwback.ui.auth
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.audigint.throwback.Event
+import com.audigint.throwback.data.auth.SpotifyUser
 
 enum class LoginEvent {
     RequestLogIn, RequestLogOut

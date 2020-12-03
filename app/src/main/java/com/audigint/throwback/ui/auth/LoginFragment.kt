@@ -1,11 +1,13 @@
 package com.audigint.throwback.ui.auth
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.audigint.throwback.EventObserver
 import com.audigint.throwback.databinding.FragmentLoginBinding
 import com.spotify.sdk.android.authentication.AuthenticationClient
@@ -17,7 +19,7 @@ import timber.log.Timber
 
 private val CLIENT_ID = "e504f7f2aa3145bc9280c67c210de1fb"
 private val REDIRECT_URI = "com.audigint.throwback://"
-private const val REQUEST_CODE = 1337
+const val LOGIN_REQUEST_CODE = 8888
 
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
@@ -49,18 +51,19 @@ class LoginFragment : Fragment() {
                     val builder = AuthenticationRequest.Builder(
                         CLIENT_ID, AuthenticationResponse.Type.TOKEN,
                         REDIRECT_URI
-                    )
+                    ).apply {
+                        setScopes(arrayOf("app-remote-control"))
+                    }
 
-                    builder.setScopes(arrayOf("streaming"))
                     val request: AuthenticationRequest = builder.build()
-
                     AuthenticationClient.openLoginActivity(
                         it,
-                        REQUEST_CODE, request
+                        LOGIN_REQUEST_CODE, request
                     )
                 }
+            } else if (req == LoginEvent.RequestLogOut) {
+                //  TODO Handle logout
             }
         })
     }
-
 }
