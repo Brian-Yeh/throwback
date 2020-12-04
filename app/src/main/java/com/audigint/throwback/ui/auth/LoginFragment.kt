@@ -1,14 +1,12 @@
 package com.audigint.throwback.ui.auth
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
-import com.audigint.throwback.EventObserver
+import com.audigint.throwback.utill.EventObserver
 import com.audigint.throwback.databinding.FragmentLoginBinding
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest

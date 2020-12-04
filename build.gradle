@@ -38,4 +38,5 @@ ext {
     materialVersion = '1.2.1'
     coroutines = '1.4.0'
     nav_version = "2.3.2"
+    fragment_version = "1.2.5"
 }

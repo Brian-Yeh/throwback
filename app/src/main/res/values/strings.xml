@@ -6,4 +6,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="queue">Queue</string>
+    <string name="play_button_desc">Play button</string>
+    <string name="previous_button_desc">Previous button</string>
+    <string name="next_button_desc">Next Button</string>
 </resources>

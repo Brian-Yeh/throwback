@@ -65,6 +65,12 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
+    // Fragments
+
+    implementation "androidx.fragment:fragment:$fragment_version"
+    implementation "androidx.fragment:fragment-ktx:$fragment_version"
+    debugImplementation "androidx.fragment:fragment-testing:$fragment_version"
+
     // Room components
     implementation "androidx.room:room-runtime:$rootProject.roomVersion"
     kapt "androidx.room:room-compiler:$rootProject.roomVersion"

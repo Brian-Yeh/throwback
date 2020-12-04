@@ -6,8 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import com.audigint.throwback.EventObserver
-import com.audigint.throwback.MainActivity
+import com.audigint.throwback.utill.EventObserver
 import com.audigint.throwback.databinding.FragmentPlayerBinding
 import dagger.hilt.android.AndroidEntryPoint
 

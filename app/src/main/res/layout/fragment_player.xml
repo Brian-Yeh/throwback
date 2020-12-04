@@ -16,19 +16,35 @@
         tools:context=".ui.PlayerFragment">
 
         <ImageButton
+            android:id="@+id/play_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:contentDescription="@string/play_button_desc"
             android:src="@drawable/ic_play_arrow_btn"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- TODO: Update blank fragment layout -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="@string/hello_blank_fragment" />
+        <ImageButton
+            android:id="@+id/prev_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_normal"
+            android:contentDescription="@string/previous_button_desc"
+            android:src="@drawable/ic_skip_previous_btn"
+            app:layout_constraintEnd_toStartOf="@id/play_btn"
+            app:layout_constraintTop_toTopOf="@id/play_btn" />
+
+        <ImageButton
+            android:id="@+id/next_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_normal"
+            android:contentDescription="@string/next_button_desc"
+            android:src="@drawable/ic_skip_next_btn"
+            app:layout_constraintStart_toEndOf="@id/play_btn"
+            app:layout_constraintTop_toTopOf="@id/play_btn" />
 
         <Button
             android:layout_width="wrap_content"
