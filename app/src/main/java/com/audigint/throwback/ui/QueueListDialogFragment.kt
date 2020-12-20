@@ -35,14 +35,14 @@ class QueueListDialogFragment : BottomSheetDialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentQueueListDialogBinding.inflate(inflater, container, false).apply {
             lifecycleOwner = viewLifecycleOwner
             viewModel = queueViewModel
         }
         queueRecyclerView = binding.queue
 
-        queueAdapter = QueueAdapter(queueViewModel)
+        queueAdapter = QueueAdapter()
 
         queueRecyclerView.apply {
             adapter = queueAdapter
@@ -58,7 +58,7 @@ class QueueListDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    class SongViewHolder (
+    class SongViewHolder(
         itemView: View
     ) : RecyclerView.ViewHolder(itemView) {
         private val title: TextView = itemView.findViewById(R.id.title)
@@ -76,9 +76,7 @@ class QueueListDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    private inner class QueueAdapter(
-        private val queueViewModel: QueueViewModel
-    ) : ListAdapter<Song, SongViewHolder>(SongsComparator()) {
+    private inner class QueueAdapter : ListAdapter<Song, SongViewHolder>(SongsComparator()) {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
             return SongViewHolder.create(parent)

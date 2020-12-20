@@ -15,38 +15,59 @@
         android:layout_height="match_parent"
         tools:context=".ui.PlayerFragment">
 
-        <ImageButton
+        <LinearLayout
+            android:id="@+id/metadata"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_normal"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.3"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/song_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{viewModel.currentSongTitle}"
+                android:textStyle="bold"
+                tools:text="Title" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/song_artist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{viewModel.currentSongArtist}"
+                tools:text="Artist" />
+
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/play_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_normal"
             android:contentDescription="@string/play_button_desc"
+            android:onClick="@{() -> viewModel.onPlayClick()}"
             android:src="@drawable/ic_play_arrow_btn"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/metadata" />
 
-        <ImageButton
-            android:id="@+id/prev_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/margin_normal"
-            android:contentDescription="@string/previous_button_desc"
-            android:src="@drawable/ic_skip_previous_btn"
-            app:layout_constraintEnd_toStartOf="@id/play_btn"
-            app:layout_constraintTop_toTopOf="@id/play_btn" />
-
-        <ImageButton
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/next_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_normal"
             android:contentDescription="@string/next_button_desc"
+            android:onClick="@{() -> viewModel.onNextClick()}"
             android:src="@drawable/ic_skip_next_btn"
             app:layout_constraintStart_toEndOf="@id/play_btn"
             app:layout_constraintTop_toTopOf="@id/play_btn" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/margin_normal"

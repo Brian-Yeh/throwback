@@ -1,8 +1,6 @@
 package com.audigint.throwback.data
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 
 @Entity(tableName = "topChartSongs", primaryKeys = ["year", "position", "title"])
 data class Song (
@@ -11,4 +9,7 @@ data class Song (
     val id: String?,
     val title: String,
     val artist: String?
-)
+) {
+    val uri: String?
+        get() = if (id.isNullOrEmpty()) null else "spotify:track:$id"
+}

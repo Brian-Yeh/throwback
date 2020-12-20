@@ -2,21 +2,34 @@ package com.audigint.throwback.utill
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.audigint.throwback.data.Song
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.protocol.types.ImageUri
 import com.spotify.protocol.types.Track
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.coroutines.resume
 
-object SpotifyManager {
-    private const val CLIENT_ID = "e504f7f2aa3145bc9280c67c210de1fb"
-    private const val REDIRECT_URI = "com.audigint.throwback://"
+@Singleton
+class SpotifyManager @Inject constructor(@ApplicationContext val context: Context) {
+    private val clientID = "e504f7f2aa3145bc9280c67c210de1fb"
+    private val redirectURI = "com.audigint.throwback://"
     private var spotifyAppRemote: SpotifyAppRemote? = null
-    private val connectionParams = ConnectionParams.Builder(CLIENT_ID)
-        .setRedirectUri(REDIRECT_URI)
+    private val connectionParams = ConnectionParams.Builder(clientID)
+        .setRedirectUri(redirectURI)
         .showAuthView(false)
         .build()
+
+    private val _onSpotifyConnected = MutableLiveData<Event<Boolean>>()
+    val onSpotifyConnected: LiveData<Event<Boolean>>
+        get() = _onSpotifyConnected
 
     enum class PlaybackState {
         PLAYING,
@@ -33,11 +46,11 @@ object SpotifyManager {
         }
     }
 
-    fun connect(context: Context, result: (SpotifyConnectionResult) -> Unit) {
+    suspend fun connect() = suspendCancellableCoroutine<SpotifyConnectionResult> { cont ->
         spotifyAppRemote?.let {
             if (it.isConnected) {
-                result(SpotifyConnectionResult.Success)
-                return
+                Timber.d("Already connected to Spotify")
+                cont.resume(SpotifyConnectionResult.Success) // TODO: Remove?
             }
         }
         SpotifyAppRemote.connect(context, connectionParams,
@@ -45,45 +58,72 @@ object SpotifyManager {
                 override fun onConnected(spotifyAppRemote: SpotifyAppRemote) {
                     this@SpotifyManager.spotifyAppRemote = spotifyAppRemote
                     Timber.d("Spotify successfully connected")
-
 //                    connected()
-                    result(SpotifyConnectionResult.Success)
+                    if (cont.isActive) {
+                        cont.resume(SpotifyConnectionResult.Success)
+                        _onSpotifyConnected.value = Event(true)
+                    }
                 }
 
                 override fun onFailure(throwable: Throwable) {
                     Timber.e(throwable)
-                    result(SpotifyConnectionResult.Error(throwable.message.toString()))
+                    if (cont.isActive) {
+                        cont.resume(SpotifyConnectionResult.Error(throwable.message.toString()))
+                        _onSpotifyConnected.value = Event(false)
+                    }
                 }
             })
     }
 
-    private fun connected() {
-        spotifyAppRemote?.let {
-            val playlistURI = "spotify:playlist:37i9dQZF1DX2sUQwD7tbmL"
-            it.playerApi.play(playlistURI)
-
-            it.playerApi.subscribeToPlayerState().setEventCallback {
-                val track: Track = it.track
-                Timber.d("%s by %s", track.name, track.artist.name)
+    fun play(song: Song) {
+        spotifyAppRemote?.playerApi?.let { player ->
+            song.uri?.let {
+                player.play(it)
+                Timber.d("Playing ${song.title}")
             }
+//            it.subscribeToPlayerState().setEventCallback {
+//                val track: Track = it.track
+//                Timber.d("%s by %s", track.name, track.artist.name)
+//            }
         }
-    }
-
-    fun play(uri: String) {
-        spotifyAppRemote?.playerApi?.play(uri)
     }
 
     fun pause() {
         spotifyAppRemote?.playerApi?.pause()
+        Timber.d("SpotifyManager.pause")
     }
 
     fun resume() {
         spotifyAppRemote?.playerApi?.resume()
+        Timber.d("SpotifyManager.resume")
+    }
+
+    fun next() {
+        spotifyAppRemote?.playerApi?.skipNext()
+        Timber.d("SpotifyManager.next")
+    }
+
+    fun prev() {
+        spotifyAppRemote?.playerApi?.skipPrevious()
+    }
+
+    suspend fun isPlaying(): Boolean = suspendCancellableCoroutine { cont ->
+        getPlaybackState {
+            if (it == PlaybackState.PLAYING) cont.resume(true)
+            else cont.resume(false)
+        }
     }
 
     fun getCurrentTrack(handler: (track: Track) -> Unit) {
         spotifyAppRemote?.playerApi?.playerState?.setResultCallback { result ->
             handler(result.track)
+        }
+    }
+
+    fun addToQueue(song: Song) {
+        song.uri?.let {
+            spotifyAppRemote?.playerApi?.queue(it)
+            Timber.d("${song.title} added to queue")
         }
     }
 
@@ -101,18 +141,10 @@ object SpotifyManager {
         }
     }
 
-    fun isConnected(): Boolean = spotifyAppRemote?.isConnected ?: false
-//    private fun signOut() {
-//        mSpotifyAppRemote?.let {
-//            it.playerApi.pause()
-//            SpotifyAppRemote.disconnect(it)
-//        }
-//        AuthorizationClient.clearCookies(this)
-//    }
+    fun subscribeToPlayerState() = spotifyAppRemote?.playerApi?.subscribeToPlayerState()
 
     fun disconnect() {
-        spotifyAppRemote?.let {
-            SpotifyAppRemote.disconnect(it)
-        }
+        pause()
+        SpotifyAppRemote.disconnect(spotifyAppRemote)
     }
 }

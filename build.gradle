@@ -9,7 +9,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:7.0.0-alpha01'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.dagger:hilt-android-gradle-plugin:2.30-alpha'
-        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.3.2"
+        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -37,6 +37,6 @@ ext {
     coreTestingVersion = '2.1.0'
     materialVersion = '1.2.1'
     coroutines = '1.4.0'
-    nav_version = "2.3.2"
+    nav_version = "2.3.1"
     fragment_version = "1.2.5"
 }
