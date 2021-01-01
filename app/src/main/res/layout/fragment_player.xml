@@ -15,32 +15,51 @@
         android:layout_height="match_parent"
         tools:context=".ui.PlayerFragment">
 
+        <ImageView
+            android:id="@+id/artwork"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginLeft="32dp"
+            android:layout_marginTop="@dimen/margin_large"
+            android:layout_marginEnd="32dp"
+            android:layout_marginRight="32dp"
+            android:contentDescription="@string/album_artwork_description"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0.2" />
+
         <LinearLayout
             android:id="@+id/metadata"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_large"
             android:layout_marginBottom="@dimen/margin_normal"
             android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.3"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintStart_toStartOf="@id/artwork"
+            app:layout_constraintTop_toBottomOf="@id/artwork">
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/song_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{viewModel.currentSongTitle}"
+                android:text="@{viewModel.trackTitle}"
+                android:textSize="24sp"
                 android:textStyle="bold"
-                tools:text="Title" />
+                tools:text="Title"
+                app:layout_constraintWidth_default="wrap" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/song_artist"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{viewModel.currentSongArtist}"
-                tools:text="Artist" />
+                android:text="@{viewModel.trackArtist}"
+                android:textSize="16sp"
+                tools:text="Artist"
+                app:layout_constraintWidth_default="wrap" />
 
         </LinearLayout>
 
@@ -48,19 +67,20 @@
             android:id="@+id/play_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_normal"
+            app:layout_constraintVertical_bias="0.7"
             android:contentDescription="@string/play_button_desc"
             android:onClick="@{() -> viewModel.onPlayClick()}"
             android:src="@drawable/ic_play_arrow_btn"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/metadata" />
+            app:layout_constraintTop_toBottomOf="@id/metadata"
+            app:layout_constraintBottom_toTopOf="@id/queue_btn" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/next_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_normal"
+            android:layout_marginStart="@dimen/margin_large"
             android:contentDescription="@string/next_button_desc"
             android:onClick="@{() -> viewModel.onNextClick()}"
             android:src="@drawable/ic_skip_next_btn"
@@ -68,6 +88,7 @@
             app:layout_constraintTop_toTopOf="@id/play_btn" />
 
         <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/queue_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/margin_normal"

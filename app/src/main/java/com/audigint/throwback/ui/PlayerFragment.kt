@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.audigint.throwback.R
 import com.audigint.throwback.databinding.FragmentPlayerBinding
-import com.audigint.throwback.utill.EventObserver
+import com.audigint.throwback.util.EventObserver
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -44,12 +44,16 @@ class PlayerFragment : Fragment() {
                 }
             })
 
-            currentSongTitle.observe(viewLifecycleOwner, { title ->
+            trackTitle.observe(viewLifecycleOwner, { title ->
                 binding.songTitle.text = title
             })
 
-            currentSongArtist.observe(viewLifecycleOwner, { artist ->
+            trackArtist.observe(viewLifecycleOwner, { artist ->
                 binding.songArtist.text = artist
+            })
+
+            trackArtwork.observe(viewLifecycleOwner, { bitmap ->
+                binding.artwork.setImageBitmap(bitmap)
             })
 
             currentQueueData.observe(viewLifecycleOwner) {

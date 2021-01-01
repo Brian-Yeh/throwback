@@ -1,17 +1,21 @@
 package com.audigint.throwback.ui
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
-import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import com.audigint.throwback.R
 import com.audigint.throwback.ui.auth.LOGIN_REQUEST_CODE
 import com.audigint.throwback.ui.auth.LoginFragmentDirections
-import com.audigint.throwback.utill.SpotifyConnectionResult
-import com.audigint.throwback.utill.SpotifyManager
+import com.audigint.throwback.util.Constants.PREFS_KEY_ACCESS_TOKEN
+import com.audigint.throwback.util.Constants.PREFS_KEY_TOKEN_EXP
+import com.audigint.throwback.util.Constants.TOKEN_EXP_BUFFER
+import com.audigint.throwback.util.SpotifyConnectionResult
+import com.audigint.throwback.util.SpotifyManager
+import com.audigint.throwback.util.SpotifyServiceInterceptor
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationResponse
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,7 +37,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         get() = Dispatchers.Main + job
 
     @Inject
+    lateinit var sharedPreferences: SharedPreferences
+
+    @Inject
     lateinit var spotifyManager: SpotifyManager
+
+    @Inject
+    lateinit var spotifyServiceInterceptor: SpotifyServiceInterceptor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,23 +51,22 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
-
         launch {
-            val result = spotifyManager.connect()
-            var action: NavDirections
-            when (result) {
-                is SpotifyConnectionResult.Success -> action =
-                    SplashFragmentDirections.actionSplashFragmentToPlayerFragment()
-                is SpotifyConnectionResult.Error -> action =
+            val action =
+                if (sharedPreferences.getLong(PREFS_KEY_TOKEN_EXP, 0) < System.currentTimeMillis()) {
                     SplashFragmentDirections.actionSplashFragmentToLoginFragment()
+                } else {
+                    when (spotifyManager.connect()) {
+                        is SpotifyConnectionResult.Success -> SplashFragmentDirections.actionSplashFragmentToPlayerFragment()
+                        is SpotifyConnectionResult.Error -> SplashFragmentDirections.actionSplashFragmentToLoginFragment()
+                    }
+                }
+            if (navController.currentDestination?.id == R.id.splashFragment) {
+                navController.navigate(
+                    action,
+                    NavOptions.Builder().setPopUpTo(R.id.splashFragment, true).build()
+                )
             }
-            navController.navigate(
-                action,
-                NavOptions.Builder().setPopUpTo(R.id.splashFragment, true).build()
-            )
-//            spotifyManager.onSpotifyConnected.observe(this@MainActivity, EventObserver { connected ->
-//                if (connected) showPlayerFragment() else showLoginFragment()
-//            })
         }
     }
 
@@ -73,6 +82,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         if (requestCode == LOGIN_REQUEST_CODE) {
             Timber.d("Spotify login request returned")
             // TODO: check scopes
+
+            spotifyServiceInterceptor.setAccessToken(resp.accessToken)
+            val expTime: Long = System.currentTimeMillis() + resp.expiresIn * 1000 - TOKEN_EXP_BUFFER
+            sharedPreferences.edit().putLong(PREFS_KEY_TOKEN_EXP, expTime).apply()
+            sharedPreferences.edit().putString(PREFS_KEY_ACCESS_TOKEN, resp.accessToken).apply()
+
             val action = LoginFragmentDirections.actionLoginFragmentToPlayerFragment()
             navController.navigate(action)
         }

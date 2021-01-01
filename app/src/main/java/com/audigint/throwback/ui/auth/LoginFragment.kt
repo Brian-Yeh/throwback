@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.audigint.throwback.utill.EventObserver
+import com.audigint.throwback.util.EventObserver
 import com.audigint.throwback.databinding.FragmentLoginBinding
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
@@ -15,8 +15,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
 
-private val CLIENT_ID = "e504f7f2aa3145bc9280c67c210de1fb"
-private val REDIRECT_URI = "com.audigint.throwback://"
+private const val CLIENT_ID = "e504f7f2aa3145bc9280c67c210de1fb"
+private const val REDIRECT_URI = "com.audigint.throwback://"
 const val LOGIN_REQUEST_CODE = 8888
 
 @AndroidEntryPoint

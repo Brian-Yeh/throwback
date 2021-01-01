@@ -6,4 +6,11 @@
         <item name="colorPrimaryDark">@color/primaryDarkColor</item>
     </style>
 
+    <style name="CustomBottomSheetDialogTheme" parent="Theme.Design.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/CustomBottomSheetStyle</item>
+    </style>
+
+    <style name="CustomBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@color/primaryColor</item>
+    </style>
 </resources>

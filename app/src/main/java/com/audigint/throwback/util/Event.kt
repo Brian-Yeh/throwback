@@ -1,4 +1,4 @@
-package com.audigint.throwback.utill
+package com.audigint.throwback.util
 
 import androidx.lifecycle.Observer
 

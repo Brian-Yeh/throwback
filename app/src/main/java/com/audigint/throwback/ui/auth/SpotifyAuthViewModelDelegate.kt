@@ -2,7 +2,7 @@ package com.audigint.throwback.ui.auth
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.audigint.throwback.utill.Event
+import com.audigint.throwback.util.Event
 import com.audigint.throwback.data.auth.SpotifyUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

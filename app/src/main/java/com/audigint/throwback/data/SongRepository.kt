@@ -1,7 +1,7 @@
 package com.audigint.throwback.data
 
 import android.content.SharedPreferences
-import com.audigint.throwback.utill.Constants
+import com.audigint.throwback.util.Constants
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

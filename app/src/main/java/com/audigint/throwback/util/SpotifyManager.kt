@@ -1,4 +1,4 @@
-package com.audigint.throwback.utill
+package com.audigint.throwback.util
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -16,6 +16,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
+
 
 @Singleton
 class SpotifyManager @Inject constructor(@ApplicationContext val context: Context) {
@@ -36,7 +37,7 @@ class SpotifyManager @Inject constructor(@ApplicationContext val context: Contex
         PAUSED
     }
 
-    fun getPlaybackState(state: (PlaybackState) -> Unit) {
+    private fun getPlaybackState(state: (PlaybackState) -> Unit) {
         spotifyAppRemote?.playerApi?.playerState?.setResultCallback { result ->
             if (result.track.uri == null || result.isPaused) {
                 state(PlaybackState.PAUSED)
@@ -47,18 +48,11 @@ class SpotifyManager @Inject constructor(@ApplicationContext val context: Contex
     }
 
     suspend fun connect() = suspendCancellableCoroutine<SpotifyConnectionResult> { cont ->
-        spotifyAppRemote?.let {
-            if (it.isConnected) {
-                Timber.d("Already connected to Spotify")
-                cont.resume(SpotifyConnectionResult.Success) // TODO: Remove?
-            }
-        }
         SpotifyAppRemote.connect(context, connectionParams,
             object : Connector.ConnectionListener {
                 override fun onConnected(spotifyAppRemote: SpotifyAppRemote) {
                     this@SpotifyManager.spotifyAppRemote = spotifyAppRemote
                     Timber.d("Spotify successfully connected")
-//                    connected()
                     if (cont.isActive) {
                         cont.resume(SpotifyConnectionResult.Success)
                         _onSpotifyConnected.value = Event(true)
@@ -81,10 +75,6 @@ class SpotifyManager @Inject constructor(@ApplicationContext val context: Contex
                 player.play(it)
                 Timber.d("Playing ${song.title}")
             }
-//            it.subscribeToPlayerState().setEventCallback {
-//                val track: Track = it.track
-//                Timber.d("%s by %s", track.name, track.artist.name)
-//            }
         }
     }
 
@@ -127,17 +117,9 @@ class SpotifyManager @Inject constructor(@ApplicationContext val context: Contex
         }
     }
 
-    fun getImage(imageUri: ImageUri, handler: (Bitmap) -> Unit)  {
+    suspend fun getArtworkImage(imageUri: ImageUri) = suspendCancellableCoroutine<Bitmap> { cont ->
         spotifyAppRemote?.imagesApi?.getImage(imageUri)?.setResultCallback {
-            handler(it)
-        }
-    }
-
-    fun getCurrentTrackImage(handler: (Bitmap) -> Unit)  {
-        getCurrentTrack {
-            getImage(it.imageUri) {
-                handler(it)
-            }
+            cont.resume(it)
         }
     }
 

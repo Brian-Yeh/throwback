@@ -1,11 +1,13 @@
 package com.audigint.throwback.ui
 
+import android.graphics.Bitmap
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.*
-import com.audigint.throwback.utill.Event
+import com.audigint.throwback.util.Event
 import com.audigint.throwback.data.Song
-import com.audigint.throwback.utill.QueueManager
-import com.audigint.throwback.utill.SpotifyManager
+import com.audigint.throwback.util.QueueManager
+import com.audigint.throwback.util.SpotifyManager
+import com.spotify.protocol.types.ImageUri
 import com.spotify.protocol.types.PlayerState
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -34,13 +36,17 @@ class PlayerViewModel @ViewModelInject constructor(
     val currentSong: LiveData<Song>
         get() = _currentSong
 
-    private val _currentSongTitle = MutableLiveData<String>()
-    val currentSongTitle: LiveData<String>
-        get() = _currentSongTitle
+    private val _trackTitle = MutableLiveData<String>()
+    val trackTitle: LiveData<String>
+        get() = _trackTitle
 
-    private val _currentSongArtist = MutableLiveData<String>()
-    val currentSongArtist: LiveData<String>
-        get() = _currentSongArtist
+    private val _trackArtist = MutableLiveData<String>()
+    val trackArtist: LiveData<String>
+        get() = _trackArtist
+
+    private val _trackArtwork = MutableLiveData<Bitmap>()
+    val trackArtwork: LiveData<Bitmap>
+        get() = _trackArtwork
 
     private val _isPlaying = MutableLiveData(false)
     val isPlaying: LiveData<Boolean>
@@ -114,6 +120,12 @@ class PlayerViewModel @ViewModelInject constructor(
         startCurrentSong()
     }
 
+    private fun loadArtworkBitmap(uri: ImageUri) {
+        viewModelScope.launch {
+            _trackArtwork.value = spotifyManager.getArtworkImage(uri)
+        }
+    }
+
     fun checkPlaybackState(playerState: PlayerState) {
         with(playerState) {
             if (track != null && currentQueue.isNotEmpty()) {
@@ -129,9 +141,10 @@ class PlayerViewModel @ViewModelInject constructor(
                         startCurrentSong()
                     }
                 } else {
-                    if (track.uri == currentSong.value?.uri && _currentSongTitle.value != track.name) {
-                        _currentSongTitle.value = track.name
-                        _currentSongArtist.value = track.artist.name
+                    if (_trackTitle.value != track.name) {
+                        _trackTitle.value = track.name
+                        _trackArtist.value = track.artist.name
+                        loadArtworkBitmap(track.imageUri)
                     }
 
                     if (!hasQueuedNext && playbackPosition == 0L) {

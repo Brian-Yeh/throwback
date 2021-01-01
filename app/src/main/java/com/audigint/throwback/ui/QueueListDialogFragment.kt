@@ -6,15 +6,14 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.ImageView
+import androidx.databinding.BindingAdapter
 import androidx.fragment.app.viewModels
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import com.audigint.throwback.R
-import com.audigint.throwback.data.Song
 import com.audigint.throwback.databinding.FragmentQueueListDialogBinding
+import com.audigint.throwback.ui.models.QueueItem
+import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
-
 
 /**
  *
@@ -26,75 +25,46 @@ import dagger.hilt.android.AndroidEntryPoint
  * </pre>
  */
 @AndroidEntryPoint
-class QueueListDialogFragment : BottomSheetDialogFragment() {
+class QueueListDialogFragment :
+    BottomSheetDialogFragment() {
     private val queueViewModel: QueueViewModel by viewModels()
-    private lateinit var queueRecyclerView: RecyclerView
-    private lateinit var queueAdapter: QueueAdapter
     private lateinit var binding: FragmentQueueListDialogBinding
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, R.style.CustomBottomSheetDialogTheme)
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentQueueListDialogBinding.inflate(inflater, container, false).apply {
             lifecycleOwner = viewLifecycleOwner
-            viewModel = queueViewModel
         }
-        queueRecyclerView = binding.queue
-
-        queueAdapter = QueueAdapter()
-
-        queueRecyclerView.apply {
-            adapter = queueAdapter
-        }
-        initQueue()
 
         return binding.root
     }
 
-    fun initQueue() {
-        queueViewModel.currentQueue.observe(viewLifecycleOwner) { songs ->
-            queueAdapter.submitList(songs)
-        }
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        binding.viewModel = queueViewModel
     }
+}
 
-    class SongViewHolder(
-        itemView: View
-    ) : RecyclerView.ViewHolder(itemView) {
-        private val title: TextView = itemView.findViewById(R.id.title)
-
-        fun bind(text: String?) {
-            title.text = text
-        }
-
-        companion object {
-            fun create(parent: ViewGroup): SongViewHolder {
-                val view: View = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_queue_song, parent, false)
-                return SongViewHolder(view)
-            }
-        }
+@BindingAdapter("queueItems")
+fun queueItems(recyclerView: RecyclerView, list: List<QueueItem>?) {
+    list ?: return
+    if (recyclerView.adapter == null) {
+        recyclerView.adapter = QueueAdapter()
     }
-
-    private inner class QueueAdapter : ListAdapter<Song, SongViewHolder>(SongsComparator()) {
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
-            return SongViewHolder.create(parent)
-        }
-
-        override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
-            val item = getItem(position)
-            holder.bind(item.title)
-        }
+    (recyclerView.adapter as QueueAdapter).apply {
+        submitList(list)
     }
+}
 
-    class SongsComparator : DiffUtil.ItemCallback<Song>() {
-        override fun areItemsTheSame(oldItem: Song, newItem: Song): Boolean {
-            return oldItem == newItem
-        }
-
-        override fun areContentsTheSame(oldItem: Song, newItem: Song): Boolean {
-            return oldItem.id == newItem.id
-        }
+@BindingAdapter("imageUrl")
+fun imageUrl(view: ImageView, url: String?) {
+    url?.let {
+        Glide.with(view).load(it).into(view)
     }
 }
