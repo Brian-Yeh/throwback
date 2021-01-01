@@ -8,25 +8,25 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SpotifyArtworkService @Inject constructor(val spotifyWebApiHelper: SpotifyWebApiHelper) {
-    private var artworkUrlMap = mutableMapOf<String, String>()
+class SpotifyMetadataService @Inject constructor(val spotifyWebApiHelper: SpotifyWebApiHelper) {
+    private var metadataMap = mutableMapOf<String, TrackMetadata>()
 
     suspend fun fetchArtworkUrls(songs: List<Song>) {
-        val idsMissingArtwork = songs.map { it.id }.toMutableList()
+        val idsMissingMetadata = songs.map { it.id }.toMutableList()
             .also { songIds ->
                 songIds.removeAll {
                     // Don't retrieve the artwork URL if we have it already
-                    artworkUrlMap.containsKey(it)
+                    metadataMap.containsKey(it)
                 }
             }
-        Timber.d(idsMissingArtwork.joinToString(",", "", ""))
+        Timber.d(idsMissingMetadata.joinToString(",", "", ""))
 
-        if (idsMissingArtwork.isNotEmpty()) {
+        if (idsMissingMetadata.isNotEmpty()) {
             try {
                 withContext(Dispatchers.IO) {
                     val tracks =
                         spotifyWebApiHelper.getTracks(
-                            idsMissingArtwork.joinToString(
+                            idsMissingMetadata.joinToString(
                                 ",",
                                 "",
                                 ""
@@ -34,8 +34,11 @@ class SpotifyArtworkService @Inject constructor(val spotifyWebApiHelper: Spotify
                         ).tracks
                     for (track in tracks) {
                         // Use smallest image
-                        artworkUrlMap[track.id] =
+                        metadataMap[track.id] = TrackMetadata(
+                            track.name,
+                            track.artists.joinToString(", ", "", "") { it.name },
                             track.album.images.minByOrNull { it.height }?.url ?: ""
+                        )
                     }
                 }
             } catch (throwable: Throwable) {
@@ -44,5 +47,11 @@ class SpotifyArtworkService @Inject constructor(val spotifyWebApiHelper: Spotify
         }
     }
 
-    fun getArtworkUrlForId(songId: String?) = artworkUrlMap[songId] ?: ""
+    fun getMetadataForId(songId: String?) = metadataMap[songId]
 }
+
+data class TrackMetadata(
+    var title: String,
+    var artist: String,
+    var artworkUrl: String
+)

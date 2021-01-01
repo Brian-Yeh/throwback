@@ -7,12 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.audigint.throwback.ui.models.QueueItem
 import com.audigint.throwback.util.QueueManager
-import com.audigint.throwback.util.SpotifyArtworkService
+import com.audigint.throwback.util.SpotifyMetadataService
 import kotlinx.coroutines.launch
 
 class QueueViewModel @ViewModelInject constructor(
     queueManager: QueueManager,
-    artworkService: SpotifyArtworkService
+    metadataService: SpotifyMetadataService
 ) : ViewModel() {
     private val _currentQueue = MutableLiveData<List<QueueItem>>()
     val currentQueue: LiveData<List<QueueItem>> = _currentQueue
@@ -20,11 +20,13 @@ class QueueViewModel @ViewModelInject constructor(
     init {
         viewModelScope.launch {
             queueManager.queue.value?.let { songs ->
-                artworkService.fetchArtworkUrls(songs)
-                val queueItems: List<QueueItem> = songs.map {
-                    QueueItem(it.id, it.title, it.artist, artworkService.getArtworkUrlForId(it.id))
+                metadataService.fetchArtworkUrls(songs)
+                val queueItems: List<QueueItem?> = songs.map { song ->
+                    metadataService.getMetadataForId(song.id)?.let { metadata ->
+                        QueueItem(song.id, metadata.title, metadata.artist, metadata.artworkUrl)
+                    }
                 }
-                _currentQueue.value = queueItems
+                _currentQueue.value = queueItems.filterNotNull()
             }
         }
     }
