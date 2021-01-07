@@ -129,4 +129,11 @@ class SpotifyManager @Inject constructor(@ApplicationContext val context: Contex
         pause()
         SpotifyAppRemote.disconnect(spotifyAppRemote)
     }
+
+    fun isConnected():Boolean {
+        spotifyAppRemote?.let {
+            if (it.isConnected) return true
+        }
+        return false
+    }
 }

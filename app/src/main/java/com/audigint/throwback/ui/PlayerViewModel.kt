@@ -56,12 +56,15 @@ class PlayerViewModel @ViewModelInject constructor(
     private var hasPlayed = false
     private var hasQueuedNext = false
     private var trackNum = 0
+    private var lastQueued = ""
+    private var currentImageUri: ImageUri? = null
 
     init {
         Timber.d("PlayerViewModel init")
         spotifyManager.subscribeToPlayerState()?.setEventCallback {
             checkPlaybackState(it)
         }
+        spotifyManager.pause()
     }
 
     fun showQueue() {
@@ -72,13 +75,10 @@ class PlayerViewModel @ViewModelInject constructor(
         viewModelScope.launch {
             if (!hasPlayed) {
                 startSession()
-                hasPlayed = true
             } else if (spotifyManager.isPlaying()) {
                 spotifyManager.pause()
-                _isPlaying.value = false
             } else {
                 spotifyManager.resume()
-                _isPlaying.value = true
             }
         }
     }
@@ -88,21 +88,29 @@ class PlayerViewModel @ViewModelInject constructor(
     }
 
     fun startSession() {
-        currentSong.value?.let { spotifyManager.addToQueue(it) }
+        currentSong.value?.let {
+            spotifyManager.addToQueue(it)
+            lastQueued = it.id.toString()
+            spotifyManager.play(it)
+            spotifyManager.next()
+        }
     }
 
     fun startCurrentSong() {
         currentSong.value?.let {
             spotifyManager.play(it)
-            _isPlaying.value = true
         }
     }
 
     private fun queueNextSong() {
-        if (currentQueue.isNotEmpty()) {
+        if (currentQueue.isNotEmpty() && !hasQueuedNext) {
             val nextTrackNum = (trackNum + 1) % currentQueue.size
-            spotifyManager.addToQueue(currentQueue[nextTrackNum])
-            hasQueuedNext = true
+            with(currentQueue[nextTrackNum]) {
+                if (lastQueued != this.id) {
+                    spotifyManager.addToQueue(this)
+                    lastQueued = this.id.toString()
+                }
+            }
         }
     }
 
@@ -112,44 +120,41 @@ class PlayerViewModel @ViewModelInject constructor(
         spotifyManager.next()
     }
 
-    // TODO: Remove
-    fun playPrev() {
-        // Wrap around to the end of Queue if we're at 0
-        trackNum = if (trackNum == 0) currentQueue.size - 1 else trackNum - 1
-        _currentSong.value = currentQueue[trackNum]
-        startCurrentSong()
-    }
-
     private fun loadArtworkBitmap(uri: ImageUri) {
         viewModelScope.launch {
             _trackArtwork.value = spotifyManager.getArtworkImage(uri)
+            currentImageUri = uri
         }
     }
 
     fun checkPlaybackState(playerState: PlayerState) {
         with(playerState) {
+            _isPlaying.value = !playerState.isPaused
             if (track != null && currentQueue.isNotEmpty()) {
-                Timber.d("playerState duration = $playbackPosition / ${track.duration}")
 
                 if (startOfSession) {
                     // Cycle through the queue until we reach the first song
                     if (track.uri != currentSong.value?.uri) {
                         spotifyManager.next()
                     } else {
-                        Timber.d("${track.uri} == ${currentSong.value?.uri}, first song found")
                         startOfSession = false
+                        hasPlayed = true
                         startCurrentSong()
                     }
                 } else {
                     if (_trackTitle.value != track.name) {
                         _trackTitle.value = track.name
                         _trackArtist.value = track.artist.name
+                    }
+
+                    if (currentImageUri != track.imageUri) {
                         loadArtworkBitmap(track.imageUri)
                     }
 
                     if (!hasQueuedNext && playbackPosition == 0L) {
                         queueNextSong()
-                    } else if (playbackPosition > 0L) {
+                        hasQueuedNext = true
+                    } else if (playbackPosition > 0L && hasQueuedNext) {
                         hasQueuedNext = false
                     }
                 }

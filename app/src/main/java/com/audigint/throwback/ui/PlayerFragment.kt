@@ -29,6 +29,7 @@ class PlayerFragment : Fragment() {
     ): View {
         binding = FragmentPlayerBinding.inflate(layoutInflater, container, false)
         playBtn = binding.playBtn
+        binding.songTitle.isSelected = true // Marquee
         return binding.root
     }
 

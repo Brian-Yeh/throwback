@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import com.audigint.throwback.R
@@ -50,26 +51,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         setContentView(R.layout.activity_main)
         navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
-
-        launch {
-            val action =
-                if (sharedPreferences.getLong(PREFS_KEY_TOKEN_EXP, 0) < System.currentTimeMillis()) {
-                    SplashFragmentDirections.actionSplashFragmentToLoginFragment()
-                } else {
-                    when (spotifyManager.connect()) {
-                        is SpotifyConnectionResult.Success -> SplashFragmentDirections.actionSplashFragmentToPlayerFragment()
-                        is SpotifyConnectionResult.Error -> SplashFragmentDirections.actionSplashFragmentToLoginFragment()
-                    }
-                }
-            if (navController.currentDestination?.id == R.id.splashFragment) {
-                navController.navigate(
-                    action,
-                    NavOptions.Builder().setPopUpTo(R.id.splashFragment, true).build()
-                )
-            }
-        }
     }
 
+    override fun onResume() {
+        super.onResume()
+        connectToSpotifyIfNeeded()
+    }
     override fun onDestroy() {
         super.onDestroy()
         spotifyManager.disconnect()
@@ -88,19 +75,52 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             sharedPreferences.edit().putLong(PREFS_KEY_TOKEN_EXP, expTime).apply()
             sharedPreferences.edit().putString(PREFS_KEY_ACCESS_TOKEN, resp.accessToken).apply()
 
-            val action = LoginFragmentDirections.actionLoginFragmentToPlayerFragment()
-            navController.navigate(action)
+            launch {
+                val res = spotifyManager.connect()
+                if (res is SpotifyConnectionResult.Success) {
+                    if (navController.currentDestination?.id == R.id.loginFragment) {
+                        val action = LoginFragmentDirections.actionLoginFragmentToPlayerFragment()
+                        navController.navigate(action)
+                    }
+                }
+            }
         }
     }
 
-    private fun showLoginFragment() {
-        val action = PlayerFragmentDirections.actionPlayerFragmentToLoginFragment()
-        navController.navigate(action)
-    }
+    fun connectToSpotifyIfNeeded() {
+        var navDir: NavDirections? = null
+        launch {
+            if (sharedPreferences.getLong(PREFS_KEY_TOKEN_EXP, 0) < System.currentTimeMillis()
+                && !spotifyManager.isConnected()
+            ) {
+                if (navController.currentDestination?.id == R.id.splashFragment) {
+                    navDir = SplashFragmentDirections.actionSplashFragmentToLoginFragment()
+                } else if (navController.currentDestination?.id == R.id.playerFragment) {
+                    navDir = PlayerFragmentDirections.actionPlayerFragmentToLoginFragment()
+                }
+            } else {
+                val connectResult: SpotifyConnectionResult = spotifyManager.connect()
+                if (connectResult is SpotifyConnectionResult.Success)
+                    if (navController.currentDestination?.id == R.id.splashFragment) {
+                        navDir = SplashFragmentDirections.actionSplashFragmentToPlayerFragment()
+                    } else if (navController.currentDestination?.id == R.id.loginFragment) {
+                        navDir = LoginFragmentDirections.actionLoginFragmentToPlayerFragment()
+                    } else {
+                        if (navController.currentDestination?.id == R.id.splashFragment) {
+                            navDir = SplashFragmentDirections.actionSplashFragmentToLoginFragment()
+                        } else if (navController.currentDestination?.id == R.id.playerFragment) {
+                            navDir = PlayerFragmentDirections.actionPlayerFragmentToLoginFragment()
+                        }
+                    }
 
-    private fun showPlayerFragment() {
-        val action = LoginFragmentDirections.actionLoginFragmentToPlayerFragment()
-        navController.navigate(action)
+            }
+            navDir?.let {
+                navController.navigate(
+                    it,
+                    NavOptions.Builder().setPopUpTo(R.id.splashFragment, true).build()
+                )
+            }
+        }
     }
 
     fun showQueue() {
