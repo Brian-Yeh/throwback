@@ -2,7 +2,7 @@ package com.audigint.throwback.di
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.audigint.throwback.data.SongRoomDatabase
+import com.audigint.throwback.data.*
 import com.audigint.throwback.util.*
 import dagger.Module
 import dagger.Provides
@@ -28,10 +28,22 @@ class AppModule {
     @Provides
     fun provideSongDao(database: SongRoomDatabase) = database.songDao()
 
+    @Singleton
     @Provides
-    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
-        return context.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
-    }
+    fun provideSongRepository(
+        songDao: SongDao,
+        sharedPreferencesStorage: SharedPreferencesStorage
+    ): SongRepository = DefaultSongRepository(songDao, sharedPreferencesStorage)
+
+//    @Provides
+//    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
+//        return context.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
+//    }
+
+    @Singleton
+    @Provides
+    fun provideSharedPreferences(@ApplicationContext context: Context): PreferencesStorage =
+        SharedPreferencesStorage(context)
 
     @Singleton
     @Provides
@@ -40,7 +52,7 @@ class AppModule {
 
     @Singleton
     @Provides
-    fun provideSpotifyServiceInterceptor(sharedPreferences: SharedPreferences) =
+    fun provideSpotifyServiceInterceptor(sharedPreferences: PreferencesStorage) =
         SpotifyServiceInterceptor(sharedPreferences)
 
     @Singleton
@@ -73,4 +85,9 @@ class AppModule {
     @Provides
     fun provideSpotifyWebApiHelper(apiHelper: SpotifyWebApiHelperImpl): SpotifyWebApiHelper =
         apiHelper
+
+    @Singleton
+    @Provides
+    fun provideMetadataService(spotifyWebApiHelper: SpotifyWebApiHelper): MetadataService =
+        SpotifyMetadataService(spotifyWebApiHelper)
 }

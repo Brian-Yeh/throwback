@@ -11,22 +11,15 @@ import com.audigint.throwback.util.SpotifyMetadataService
 import kotlinx.coroutines.launch
 
 class QueueViewModel @ViewModelInject constructor(
-    queueManager: QueueManager,
-    metadataService: SpotifyMetadataService
+    queueManager: QueueManager
 ) : ViewModel() {
     private val _currentQueue = MutableLiveData<List<QueueItem>>()
     val currentQueue: LiveData<List<QueueItem>> = _currentQueue
 
     init {
         viewModelScope.launch {
-            queueManager.queue.value?.let { songs ->
-                metadataService.fetchArtworkUrls(songs)
-                val queueItems: List<QueueItem?> = songs.map { song ->
-                    metadataService.getMetadataForId(song.id)?.let { metadata ->
-                        QueueItem(song.id, metadata.title, metadata.artist, metadata.artworkUrl)
-                    }
-                }
-                _currentQueue.value = queueItems.filterNotNull()
+            queueManager.queue.value?.let { queueItems ->
+                _currentQueue.value = queueItems
             }
         }
     }

@@ -1,14 +1,22 @@
 package com.audigint.throwback.data
 
-import android.content.SharedPreferences
-import com.audigint.throwback.util.Constants
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class SongRepository @Inject constructor(private val songDao: SongDao, private val sharedPreferences: SharedPreferences) {
-    val currentQueue: Flow<List<Song>>
-        get() = songDao.getSongsByYearAndPosition(
-            sharedPreferences.getInt(Constants.PREFS_KEY_YEAR, 2016),
-            sharedPreferences.getInt(Constants.PREFS_KEY_POSITION, 10)
+interface SongRepository {
+    fun setAndGetCurrentQueue(year: Int): Flow<List<Song>>
+}
+
+class DefaultSongRepository @Inject constructor(
+    private val songDao: SongDao,
+    private val sharedPreferences: SharedPreferencesStorage
+) : SongRepository {
+
+    override fun setAndGetCurrentQueue(year: Int): Flow<List<Song>> {
+        sharedPreferences.year = year
+        return songDao.getSongsByYearAndPosition(
+            year,
+            sharedPreferences.position
         )
+    }
 }

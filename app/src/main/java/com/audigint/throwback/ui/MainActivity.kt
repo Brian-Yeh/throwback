@@ -1,7 +1,6 @@
 package com.audigint.throwback.ui
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
@@ -9,10 +8,9 @@ import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import com.audigint.throwback.R
+import com.audigint.throwback.data.PreferencesStorage
 import com.audigint.throwback.ui.auth.LOGIN_REQUEST_CODE
 import com.audigint.throwback.ui.auth.LoginFragmentDirections
-import com.audigint.throwback.util.Constants.PREFS_KEY_ACCESS_TOKEN
-import com.audigint.throwback.util.Constants.PREFS_KEY_TOKEN_EXP
 import com.audigint.throwback.util.Constants.TOKEN_EXP_BUFFER
 import com.audigint.throwback.util.SpotifyConnectionResult
 import com.audigint.throwback.util.SpotifyManager
@@ -38,7 +36,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         get() = Dispatchers.Main + job
 
     @Inject
-    lateinit var sharedPreferences: SharedPreferences
+    lateinit var sharedPreferences: PreferencesStorage
 
     @Inject
     lateinit var spotifyManager: SpotifyManager
@@ -72,8 +70,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
             spotifyServiceInterceptor.setAccessToken(resp.accessToken)
             val expTime: Long = System.currentTimeMillis() + resp.expiresIn * 1000 - TOKEN_EXP_BUFFER
-            sharedPreferences.edit().putLong(PREFS_KEY_TOKEN_EXP, expTime).apply()
-            sharedPreferences.edit().putString(PREFS_KEY_ACCESS_TOKEN, resp.accessToken).apply()
+            sharedPreferences.tokenExp = expTime
+            sharedPreferences.accessToken = resp.accessToken
 
             launch {
                 val res = spotifyManager.connect()
@@ -90,7 +88,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     fun connectToSpotifyIfNeeded() {
         var navDir: NavDirections? = null
         launch {
-            if (sharedPreferences.getLong(PREFS_KEY_TOKEN_EXP, 0) < System.currentTimeMillis()
+            if (sharedPreferences.tokenExp < System.currentTimeMillis()
                 && !spotifyManager.isConnected()
             ) {
                 if (navController.currentDestination?.id == R.id.splashFragment) {

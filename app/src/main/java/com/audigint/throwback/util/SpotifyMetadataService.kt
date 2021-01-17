@@ -8,10 +8,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SpotifyMetadataService @Inject constructor(val spotifyWebApiHelper: SpotifyWebApiHelper) {
-    private var metadataMap = mutableMapOf<String, TrackMetadata>()
+class SpotifyMetadataService @Inject constructor(val spotifyWebApiHelper: SpotifyWebApiHelper) :
+    MetadataService {
+    override var metadataMap = mutableMapOf<String, TrackMetadata>()
 
-    suspend fun fetchArtworkUrls(songs: List<Song>) {
+    override suspend fun fetchMetadata(songs: List<Song>) {
         val idsMissingMetadata = songs.map { it.id }.toMutableList()
             .also { songIds ->
                 songIds.removeAll {
@@ -47,11 +48,5 @@ class SpotifyMetadataService @Inject constructor(val spotifyWebApiHelper: Spotif
         }
     }
 
-    fun getMetadataForId(songId: String?) = metadataMap[songId]
+    override fun getMetadataForId(songId: String?) = metadataMap[songId]
 }
-
-data class TrackMetadata(
-    var title: String,
-    var artist: String,
-    var artworkUrl: String
-)

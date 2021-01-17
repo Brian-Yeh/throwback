@@ -1,15 +1,14 @@
 package com.audigint.throwback.util
 
-import android.content.SharedPreferences
-import com.audigint.throwback.util.Constants.PREFS_KEY_ACCESS_TOKEN
+import com.audigint.throwback.data.PreferencesStorage
 import okhttp3.Interceptor
 import okhttp3.Response
 import timber.log.Timber
 import javax.inject.Inject
 
-class SpotifyServiceInterceptor @Inject constructor(sharedPreferences: SharedPreferences) :
+class SpotifyServiceInterceptor @Inject constructor(prefs: PreferencesStorage) :
     Interceptor {
-    private var accessToken = sharedPreferences.getString(PREFS_KEY_ACCESS_TOKEN, "")
+    private var accessToken = prefs.accessToken
 
     fun setAccessToken(token: String) {
         accessToken = token

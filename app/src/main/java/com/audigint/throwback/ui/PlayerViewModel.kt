@@ -5,6 +5,7 @@ import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.*
 import com.audigint.throwback.util.Event
 import com.audigint.throwback.data.Song
+import com.audigint.throwback.ui.models.QueueItem
 import com.audigint.throwback.util.QueueManager
 import com.audigint.throwback.util.SpotifyManager
 import com.spotify.protocol.types.ImageUri
@@ -16,16 +17,16 @@ class PlayerViewModel @ViewModelInject constructor(
     private val spotifyManager: SpotifyManager,
     queueManager: QueueManager
 ) : ViewModel() {
-    val currentQueueData: LiveData<List<Song>> = queueManager.queue
+    val currentQueueData: LiveData<List<QueueItem>> = queueManager.queue
 
-    private var _currentQueue: List<Song> = emptyList()
-    var currentQueue: List<Song>
+    private var _currentQueue: List<QueueItem> = emptyList()
+    var currentQueue: List<QueueItem>
         get() = _currentQueue
         set(newQueue) {
             trackNum = 0
             _currentQueue = newQueue.also {
-                it[trackNum].let { song ->
-                    _currentSong.value = song
+                it[trackNum].let { queueItem ->
+                    _currentSong.value = queueItem.song
                 }
             }
         }
@@ -107,8 +108,10 @@ class PlayerViewModel @ViewModelInject constructor(
             val nextTrackNum = (trackNum + 1) % currentQueue.size
             with(currentQueue[nextTrackNum]) {
                 if (lastQueued != this.id) {
-                    spotifyManager.addToQueue(this)
-                    lastQueued = this.id.toString()
+                    this.song?.let {
+                        spotifyManager.addToQueue(it)
+                        lastQueued = this.id.toString()
+                    }
                 }
             }
         }
@@ -116,7 +119,7 @@ class PlayerViewModel @ViewModelInject constructor(
 
     fun playNext() {
         trackNum = (trackNum + 1) % currentQueue.size
-        _currentSong.value = currentQueue[trackNum]
+        _currentSong.value = currentQueue[trackNum].song
         spotifyManager.next()
     }
 
