@@ -1,18 +1,10 @@
 package com.audigint.throwback.util
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.lifecycle.Observer
 import com.audigint.throwback.testUtils.fakes.FakeMetadataService
 import com.audigint.throwback.testUtils.fakes.FakePreferencesStorage
 import com.audigint.throwback.testUtils.fakes.FakeSongRepository
-import com.audigint.throwback.ui.models.QueueItem
-import getOrAwaitValue
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -20,30 +12,20 @@ import org.junit.Before
 import org.junit.Rule
 
 class QueueManagerTest {
-    lateinit var queueManager: QueueManager
-
-    @ExperimentalCoroutinesApi
-    val testDispatcher: TestCoroutineDispatcher = TestCoroutineDispatcher()
+    private lateinit var queueManager: QueueManager
 
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
     fun setup() {
-        queueManager = QueueManager(createTestRepository(), createTestMetadataService(), createTestPreferencesStorage())
-    }
-
-    @ExperimentalCoroutinesApi
-    @Before
-    fun setupDispatcher() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @ExperimentalCoroutinesApi
-    @After
-    fun tearDownDispatcher() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
+        queueManager = QueueManager(
+            createTestRepository(),
+            createTestMetadataService(),
+            mainCoroutineRule.testDispatcher,
+            mainCoroutineRule.testDispatcher,
+            createTestPreferencesStorage()
+        )
     }
 
     @ExperimentalCoroutinesApi
@@ -52,26 +34,15 @@ class QueueManagerTest {
 
     @Test
     fun setQueueWithYear_ReturnsNotNull() {
-        val observer = Observer<List<QueueItem>> {}
-        try {
-            queueManager.queue.observeForever(observer)
+        queueManager.setQueueWithYear(Constants.DEFAULT_YEAR)
 
-            queueManager.setQueueWithYear(Constants.DEFAULT_YEAR)
-
-            val value = queueManager.queue.getOrAwaitValue()
-            assertNotNull(value)
-        } finally {
-            queueManager.queue.removeObserver(observer)
-        }
+        val value = LiveDataTestUtil.getValue(queueManager.queue)
+        assertNotNull(value)
     }
 
-    @Test
-    fun setQueueWithYear() {
-    }
+    private fun createTestRepository() = FakeSongRepository()
 
-    fun createTestRepository() = FakeSongRepository()
+    private fun createTestMetadataService() = FakeMetadataService()
 
-    fun createTestMetadataService() = FakeMetadataService()
-
-    fun createTestPreferencesStorage() = FakePreferencesStorage()
+    private fun createTestPreferencesStorage() = FakePreferencesStorage()
 }

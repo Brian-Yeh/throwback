@@ -1,40 +1,44 @@
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 
 
-@VisibleForTesting(otherwise = VisibleForTesting.NONE)
-fun <T> LiveData<T>.getOrAwaitValue(
-    time: Long = 2,
-    timeUnit: TimeUnit = TimeUnit.SECONDS,
-    afterObserve: () -> Unit = {}
-): T {
-    var data: T? = null
-    val latch = CountDownLatch(1)
-    val observer = object : Observer<T> {
-        override fun onChanged(o: T?) {
-            data = o
-            latch.countDown()
-            this@getOrAwaitValue.removeObserver(this)
+/**
+ * Safely handles observables from LiveData for testing.
+ */
+object LiveDataTestUtil {
+
+    /**
+     * Gets the value of a LiveData safely.
+     */
+    @Throws(InterruptedException::class)
+    fun <T> getValue(liveData: LiveData<T>): T? {
+        var data: T? = null
+        val latch = CountDownLatch(1)
+        val observer = object : Observer<T> {
+            override fun onChanged(o: T?) {
+                data = o
+                latch.countDown()
+                liveData.removeObserver(this)
+            }
         }
-    }
-    this.observeForever(observer)
+        liveData.observeForever(observer)
+        latch.await(5, TimeUnit.SECONDS)
 
+        return data
+    }
+}
+
+/**
+ * Observes a [LiveData] until the `block` is done executing.
+ */
+fun <T> LiveData<T>.observeForTesting(block: () -> Unit) {
+    val observer = Observer<T> { }
     try {
-        afterObserve.invoke()
-
-        // Don't wait indefinitely if the LiveData is not set.
-        if (!latch.await(time, timeUnit)) {
-            throw TimeoutException("LiveData value was never set.")
-        }
-
+        observeForever(observer)
+        block()
     } finally {
-        this.removeObserver(observer)
+        removeObserver(observer)
     }
-
-    @Suppress("UNCHECKED_CAST")
-    return data as T
 }

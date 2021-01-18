@@ -4,7 +4,7 @@ import com.audigint.throwback.data.Song
 import com.audigint.throwback.util.MetadataService
 import com.audigint.throwback.util.TrackMetadata
 
-class FakeMetadataService() : MetadataService {
+class FakeMetadataService : MetadataService {
     override var metadataMap = mutableMapOf<String, TrackMetadata>()
 
     override suspend fun fetchMetadata(songs: List<Song>) {
@@ -13,5 +13,5 @@ class FakeMetadataService() : MetadataService {
         }
     }
 
-    override fun getMetadataForId(songId: String?) = metadataMap.get(songId)
+    override fun getMetadataForId(songId: String?) = metadataMap[songId]
 }

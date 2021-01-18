@@ -1,7 +1,6 @@
 package com.audigint.throwback.di
 
 import android.content.Context
-import android.content.SharedPreferences
 import com.audigint.throwback.data.*
 import com.audigint.throwback.util.*
 import dagger.Module
@@ -34,11 +33,6 @@ class AppModule {
         songDao: SongDao,
         sharedPreferencesStorage: SharedPreferencesStorage
     ): SongRepository = DefaultSongRepository(songDao, sharedPreferencesStorage)
-
-//    @Provides
-//    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
-//        return context.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
-//    }
 
     @Singleton
     @Provides

@@ -1,21 +1,14 @@
 package com.audigint.throwback.data
 
 import android.content.Context
-import androidx.lifecycle.asLiveData
-import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.audigint.throwback.util.Constants
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import timber.log.Timber
 
 class SongRoomDatabaseTest {
     private lateinit var songDao: SongDao

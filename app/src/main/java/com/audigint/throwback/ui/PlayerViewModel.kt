@@ -2,20 +2,26 @@ package com.audigint.throwback.ui
 
 import android.graphics.Bitmap
 import androidx.hilt.lifecycle.ViewModelInject
-import androidx.lifecycle.*
-import com.audigint.throwback.util.Event
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.audigint.throwback.data.Song
+import com.audigint.throwback.di.MainDispatcher
 import com.audigint.throwback.ui.models.QueueItem
+import com.audigint.throwback.util.Event
 import com.audigint.throwback.util.QueueManager
 import com.audigint.throwback.util.SpotifyManager
 import com.spotify.protocol.types.ImageUri
 import com.spotify.protocol.types.PlayerState
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class PlayerViewModel @ViewModelInject constructor(
     private val spotifyManager: SpotifyManager,
-    queueManager: QueueManager
+    queueManager: QueueManager,
+    @MainDispatcher private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val currentQueueData: LiveData<List<QueueItem>> = queueManager.queue
 
@@ -73,7 +79,7 @@ class PlayerViewModel @ViewModelInject constructor(
     }
 
     fun onPlayClick() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             if (!hasPlayed) {
                 startSession()
             } else if (spotifyManager.isPlaying()) {
@@ -124,7 +130,7 @@ class PlayerViewModel @ViewModelInject constructor(
     }
 
     private fun loadArtworkBitmap(uri: ImageUri) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             _trackArtwork.value = spotifyManager.getArtworkImage(uri)
             currentImageUri = uri
         }
