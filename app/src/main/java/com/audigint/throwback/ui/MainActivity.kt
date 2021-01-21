@@ -98,18 +98,19 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
             } else {
                 val connectResult: SpotifyConnectionResult = spotifyManager.connect()
-                if (connectResult is SpotifyConnectionResult.Success)
+                if (connectResult is SpotifyConnectionResult.Success) {
                     if (navController.currentDestination?.id == R.id.splashFragment) {
                         navDir = SplashFragmentDirections.actionSplashFragmentToPlayerFragment()
                     } else if (navController.currentDestination?.id == R.id.loginFragment) {
                         navDir = LoginFragmentDirections.actionLoginFragmentToPlayerFragment()
-                    } else {
-                        if (navController.currentDestination?.id == R.id.splashFragment) {
-                            navDir = SplashFragmentDirections.actionSplashFragmentToLoginFragment()
-                        } else if (navController.currentDestination?.id == R.id.playerFragment) {
-                            navDir = PlayerFragmentDirections.actionPlayerFragmentToLoginFragment()
-                        }
                     }
+                } else {
+                    if (navController.currentDestination?.id == R.id.splashFragment) {
+                        navDir = SplashFragmentDirections.actionSplashFragmentToLoginFragment()
+                    } else if (navController.currentDestination?.id == R.id.playerFragment) {
+                        navDir = PlayerFragmentDirections.actionPlayerFragmentToLoginFragment()
+                    }
+                }
 
             }
             navDir?.let {

@@ -15,6 +15,30 @@
         android:layout_height="match_parent"
         tools:context=".ui.PlayerFragment">
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/artwork"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/throwback_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/throwback_title"
+                android:textSize="24sp" />
+
+            <Spinner
+                android:id="@+id/year_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/margin_xsmall"
+                android:background="@null"
+                tools:setOnItemSelectedListener="@{viewModel.yearSpinnerClickListener}" />
+        </LinearLayout>
+
         <ImageView
             android:id="@+id/artwork"
             android:layout_width="0dp"

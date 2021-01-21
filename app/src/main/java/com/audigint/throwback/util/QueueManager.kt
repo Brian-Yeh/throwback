@@ -27,6 +27,10 @@ class QueueManager @Inject constructor(
     private val _queue = MutableLiveData<List<QueueItem>>()
     val queue: LiveData<List<QueueItem>>
         get() = _queue
+    var year: Int = sharedPreferences.year
+        set(value) {
+            setQueueWithYear(value)
+        }
 
     init {
         setQueueWithYear(sharedPreferences.year)

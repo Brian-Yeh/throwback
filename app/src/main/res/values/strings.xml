@@ -10,4 +10,5 @@
     <string name="previous_button_desc">Previous button</string>
     <string name="next_button_desc">Next Button</string>
     <string name="album_artwork_description">Album artwork</string>
+    <string name="throwback_title">Throwback to</string>
 </resources>

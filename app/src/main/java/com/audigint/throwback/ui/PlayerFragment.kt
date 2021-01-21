@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -63,6 +64,15 @@ class PlayerFragment : Fragment() {
 
             isPlaying.observe(viewLifecycleOwner) { playing ->
                 playBtn.setImageResource(if (playing) R.drawable.ic_pause_btn else R.drawable.ic_play_arrow_btn)
+            }
+
+            this.yearSpinner = binding.yearSpinner
+            activity?.let {
+                ArrayAdapter(it, R.layout.spinner_item, (1959..2016).toList()).also { adapter ->
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    this.yearSpinner.adapter = adapter
+                    setInitialYear()
+                }
             }
         }
     }

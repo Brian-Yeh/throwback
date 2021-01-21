@@ -1,6 +1,9 @@
 package com.audigint.throwback.ui
 
 import android.graphics.Bitmap
+import android.view.View
+import android.widget.AdapterView
+import android.widget.Spinner
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,13 +17,14 @@ import com.audigint.throwback.util.QueueManager
 import com.audigint.throwback.util.SpotifyManager
 import com.spotify.protocol.types.ImageUri
 import com.spotify.protocol.types.PlayerState
+import com.spotify.protocol.types.Track
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class PlayerViewModel @ViewModelInject constructor(
     private val spotifyManager: SpotifyManager,
-    queueManager: QueueManager,
+    private val queueManager: QueueManager,
     @MainDispatcher private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
     val currentQueueData: LiveData<List<QueueItem>> = queueManager.queue
@@ -31,6 +35,7 @@ class PlayerViewModel @ViewModelInject constructor(
         set(newQueue) {
             trackNum = 0
             _currentQueue = newQueue.also {
+                onNewQueue()
                 it[trackNum].let { queueItem ->
                     _currentSong.value = queueItem.song
                 }
@@ -59,12 +64,23 @@ class PlayerViewModel @ViewModelInject constructor(
     val isPlaying: LiveData<Boolean>
         get() = _isPlaying
 
+    private var nextSong: Song? = null
+
+    private var trackWasStarted = false
+    private var playingNext = false
     private var startOfSession = true
-    private var hasPlayed = false
-    private var hasQueuedNext = false
+
     private var trackNum = 0
-    private var lastQueued = ""
     private var currentImageUri: ImageUri? = null
+
+    lateinit var yearSpinner: Spinner
+    val yearSpinnerClickListener = object : AdapterView.OnItemSelectedListener {
+        override fun onItemSelected(adapterView: AdapterView<*>?, view: View?, pos: Int, id: Long) {
+            queueManager.year = adapterView?.getItemAtPosition(pos) as Int
+        }
+
+        override fun onNothingSelected(p0: AdapterView<*>?) {}
+    }
 
     init {
         Timber.d("PlayerViewModel init")
@@ -74,59 +90,125 @@ class PlayerViewModel @ViewModelInject constructor(
         spotifyManager.pause()
     }
 
+    fun setInitialYear() {
+        yearSpinner.setSelection(queueManager.year - yearSpinner.adapter.getItem(0) as Int)
+    }
+
     fun showQueue() {
         showQueue.value = Event(true)
     }
 
     fun onPlayClick() {
         viewModelScope.launch(dispatcher) {
-            if (!hasPlayed) {
-                startSession()
-            } else if (spotifyManager.isPlaying()) {
-                spotifyManager.pause()
-            } else {
-                spotifyManager.resume()
+            when {
+                startOfSession -> {
+                    startSession()
+                }
+                spotifyManager.isPlaying() -> {
+                    spotifyManager.pause()
+                }
+                else -> {
+                    spotifyManager.resume()
+                }
             }
         }
     }
 
     fun onNextClick() {
-        playNext()
+        if (startOfSession) startSession() else playNext()
+    }
+
+    fun onNewQueue() {
+        spotifyManager.pause()
+        startOfSession = true
+        currentImageUri = null
+        trackWasStarted = false
+        nextSong = null
+        _trackArtwork.value = null
+        _trackTitle.value = ""
+        _trackArtist.value = ""
     }
 
     fun startSession() {
-        currentSong.value?.let {
-            spotifyManager.addToQueue(it)
-            lastQueued = it.id.toString()
-            spotifyManager.play(it)
-            spotifyManager.next()
-        }
+        startOfSession = false
+        startCurrentSong()
     }
 
     fun startCurrentSong() {
         currentSong.value?.let {
             spotifyManager.play(it)
         }
+        setNextSong()
     }
 
-    private fun queueNextSong() {
-        if (currentQueue.isNotEmpty() && !hasQueuedNext) {
-            val nextTrackNum = (trackNum + 1) % currentQueue.size
-            with(currentQueue[nextTrackNum]) {
-                if (lastQueued != this.id) {
-                    this.song?.let {
-                        spotifyManager.addToQueue(it)
-                        lastQueued = this.id.toString()
-                    }
-                }
+    fun setNextSong() {
+        Timber.d("Set next song to ${currentQueue[getNextSongIndex()].song?.title}")
+        nextSong = currentQueue[getNextSongIndex()].song
+    }
+
+    fun playNext() {
+        if (!playingNext) {
+            playingNext = true
+            trackWasStarted = false
+            currentQueue[getNextSongIndex()].song?.let {
+                spotifyManager.play(it)
             }
         }
     }
 
-    fun playNext() {
-        trackNum = (trackNum + 1) % currentQueue.size
+    private fun startedNextSong(track: Track): Boolean = track.uri == nextSong?.uri
+
+    private fun onNextSongPlayed() {
+        playingNext = false
+        trackNum = getNextSongIndex()
         _currentSong.value = currentQueue[trackNum].song
-        spotifyManager.next()
+        setNextSong()
+    }
+
+    private fun getNextSongIndex() = (trackNum + 1) % currentQueue.size
+
+    private fun setTrackWasStarted(playerState: PlayerState) {
+        val position = playerState.playbackPosition
+        val duration = playerState.track.duration
+        val isPlaying = !playerState.isPaused
+
+        if (!trackWasStarted && position > 0 && duration > 0 && isPlaying) {
+            trackWasStarted = true
+        }
+    }
+
+    fun checkPlaybackState(playerState: PlayerState) {
+        with(playerState) {
+            _isPlaying.value = !playerState.isPaused
+
+            if (track != null && currentQueue.isNotEmpty() && !startOfSession) {
+                if (!trackWasStarted) {
+                    // Ensure that the correct next song has been played
+                    if (playingNext) {
+                        if (startedNextSong(track)) {
+                            onNextSongPlayed()
+                        }
+                        updateMetadataAndArt(this)
+                        return
+                    } else if (currentSong.value?.uri != track.uri) {
+                        startCurrentSong()
+                    }
+                }
+                setTrackWasStarted(this)
+
+                val hasEnded = trackWasStarted && !playingNext && playbackPosition == 0L
+                val songPlayingIsNotRight = !playingNext && track?.uri != currentSong.value?.uri
+
+                if (hasEnded) {
+                    spotifyManager.pause()
+                    playNext()
+                } else if (songPlayingIsNotRight && !isPaused) {
+                    spotifyManager.pause()
+                    startCurrentSong()
+                }
+                updateMetadataAndArt(this)
+            }
+        }
     }
 
     private fun loadArtworkBitmap(uri: ImageUri) {
@@ -136,37 +218,15 @@ class PlayerViewModel @ViewModelInject constructor(
         }
     }
 
-    fun checkPlaybackState(playerState: PlayerState) {
+    fun updateMetadataAndArt(playerState: PlayerState) {
         with(playerState) {
-            _isPlaying.value = !playerState.isPaused
-            if (track != null && currentQueue.isNotEmpty()) {
+            if (_trackTitle.value != track.name) {
+                _trackTitle.value = track.name
+                _trackArtist.value = track.artist.name
+            }
 
-                if (startOfSession) {
-                    // Cycle through the queue until we reach the first song
-                    if (track.uri != currentSong.value?.uri) {
-                        spotifyManager.next()
-                    } else {
-                        startOfSession = false
-                        hasPlayed = true
-                        startCurrentSong()
-                    }
-                } else {
-                    if (_trackTitle.value != track.name) {
-                        _trackTitle.value = track.name
-                        _trackArtist.value = track.artist.name
-                    }
-
-                    if (currentImageUri != track.imageUri) {
-                        loadArtworkBitmap(track.imageUri)
-                    }
-
-                    if (!hasQueuedNext && playbackPosition == 0L) {
-                        queueNextSong()
-                        hasQueuedNext = true
-                    } else if (playbackPosition > 0L && hasQueuedNext) {
-                        hasQueuedNext = false
-                    }
-                }
+            if (currentImageUri != track.imageUri) {
+                loadArtworkBitmap(track.imageUri)
             }
         }
     }
