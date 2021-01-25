@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
@@ -10,34 +11,35 @@
             type="com.audigint.throwback.ui.PlayerViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".ui.PlayerFragment">
 
-        <LinearLayout
+
+        <TextView
+            android:id="@+id/throwback_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/throwback_title"
+            android:textSize="24sp"
             app:layout_constraintBottom_toTopOf="@id/artwork"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/year_spinner"
+            app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <TextView
-                android:id="@+id/throwback_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/throwback_title"
-                android:textSize="24sp" />
-
-            <Spinner
-                android:id="@+id/year_spinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_xsmall"
-                android:background="@null"
-                tools:setOnItemSelectedListener="@{viewModel.yearSpinnerClickListener}" />
-        </LinearLayout>
+        <Spinner
+            android:id="@+id/year_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_xsmall"
+            android:background="@null"
+            app:layout_constraintBottom_toTopOf="@+id/artwork"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/throwback_title"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:setOnItemSelectedListener="@{viewModel.yearSpinnerClickListener}" />
 
         <ImageView
             android:id="@+id/artwork"
