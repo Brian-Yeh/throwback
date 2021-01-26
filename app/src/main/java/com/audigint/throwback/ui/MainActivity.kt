@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         super.onResume()
         connectToSpotifyIfNeeded()
     }
+
     override fun onDestroy() {
         super.onDestroy()
         spotifyManager.disconnect()
@@ -68,20 +69,28 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             Timber.d("Spotify login request returned")
             // TODO: check scopes
 
-            spotifyServiceInterceptor.setAccessToken(resp.accessToken)
-            val expTime: Long = System.currentTimeMillis() + resp.expiresIn * 1000 - TOKEN_EXP_BUFFER
-            sharedPreferences.tokenExp = expTime
-            sharedPreferences.accessToken = resp.accessToken
+            resp.accessToken?.let {
+                spotifyServiceInterceptor.setAccessToken(resp.accessToken)
+                val expTime: Long =
+                    System.currentTimeMillis() + resp.expiresIn * 1000 - TOKEN_EXP_BUFFER
+                sharedPreferences.tokenExp = expTime
+                sharedPreferences.accessToken = resp.accessToken
 
-            launch {
-                val res = spotifyManager.connect()
-                if (res is SpotifyConnectionResult.Success) {
-                    if (navController.currentDestination?.id == R.id.loginFragment) {
-                        val action = LoginFragmentDirections.actionLoginFragmentToPlayerFragment()
-                        navController.navigate(action)
+                launch {
+                    val res = spotifyManager.connect()
+                    if (res is SpotifyConnectionResult.Success) {
+                        if (navController.currentDestination?.id == R.id.loginFragment) {
+                            val action =
+                                LoginFragmentDirections.actionLoginFragmentToPlayerFragment()
+                            navController.navigate(action)
+                        }
+                    } else {
+                        with (res as SpotifyConnectionResult.Error) {
+                            Timber.e(this.message)
+                        }
                     }
                 }
-            }
+            } ?: Timber.w("accessToken is null")
         }
     }
 
@@ -105,6 +114,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                         navDir = LoginFragmentDirections.actionLoginFragmentToPlayerFragment()
                     }
                 } else {
+                    with (connectResult as SpotifyConnectionResult.Error) {
+                        Timber.e(this.message)
+                    }
                     if (navController.currentDestination?.id == R.id.splashFragment) {
                         navDir = SplashFragmentDirections.actionSplashFragmentToLoginFragment()
                     } else if (navController.currentDestination?.id == R.id.playerFragment) {
